@@ -11,27 +11,34 @@ fn main() -> io::Result<()> {
         if let Ok(content) = line {
             let game_splitted : Vec<&str> = content.split(": ").collect();
 
-            let index : i32 = (&game_splitted[0][5..]).parse::<i32>().unwrap();
-
-            let mut flag = true;
+            let mut red = 0;
+            let mut green = 0;
+            let mut blue = 0;
 
             for trial in game_splitted[1].split("; ") {
                 for cube in trial.split(", ") {
-                    if cube.ends_with(" red") && (&cube[..cube.len()-4]).parse::<i32>().unwrap() > 12 {
-                        flag = false;
+                    if cube.ends_with(" red") { 
+                        let new_red = (&cube[..cube.len()-4]).parse::<i32>().unwrap();
+                        if new_red > red {
+                            red = new_red;
+                        }
                     }
-                    if cube.ends_with(" green") && (&cube[..cube.len()-6]).parse::<i32>().unwrap() > 13 {
-                        flag = false;
+                    if cube.ends_with(" green") {
+                        let new_green = (&cube[..cube.len()-6]).parse::<i32>().unwrap();
+                        if new_green > green {
+                            green = new_green;
+                        }
                     }
-                    if cube.ends_with(" blue") && (&cube[..cube.len()-5]).parse::<i32>().unwrap() > 14 {
-                        flag = false;
+                    if cube.ends_with(" blue") {
+                        let new_blue = (&cube[..cube.len()-5]).parse::<i32>().unwrap();
+                        if new_blue > blue {
+                            blue = new_blue;
+                        }
                     }
                 }
             }
 
-            if flag {
-                result += index;
-            }
+            result += red * green * blue;
         }
     }
 
