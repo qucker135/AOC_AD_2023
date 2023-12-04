@@ -3,6 +3,15 @@ use std::io::{self, prelude::*, BufReader};
 use std::collections::HashSet;
 use regex::Regex;
 
+fn push_or_inc(v: &mut Vec<i32>, ind: usize, inc: i32){
+    if ind >= v.len() {
+        v.push(inc);
+    }
+    else {
+        v[ind] += inc;
+    }
+}
+
 fn main() -> io::Result<()> {
     let file = File::open("src/input.txt")?;
     let reader = BufReader::new(file);
@@ -11,8 +20,12 @@ fn main() -> io::Result<()> {
 
     let re = Regex::new(r"[0-9]+").unwrap();
 
-    for line in reader.lines() {
+    let mut scratchcards_nrs :Vec<i32> = vec![];
+
+    for (line_nr, line) in reader.lines().enumerate() {
         if let Ok(content) = line {
+            push_or_inc(&mut scratchcards_nrs, line_nr, 1); 
+
             let sets_strings :Vec<&str> = content.split(':').collect::<Vec<&str>>()[1].split('|').collect();
 
             let mut h0 :HashSet<i32> = HashSet::new();
@@ -28,13 +41,18 @@ fn main() -> io::Result<()> {
 
             let length = h0.intersection(&h1).collect::<HashSet<_>>().len();
 
-            if length > 0 {
-                result += 2_i32.pow((length - 1).try_into().unwrap());
+            let bfr = scratchcards_nrs[line_nr];
+
+            for i in 1..length + 1 {
+                push_or_inc(&mut scratchcards_nrs, line_nr + i, bfr);
             }
         }
     }
 
-    
+    for v in scratchcards_nrs.iter() {
+        result += v;
+    }
+
     println!("Final answer: {}", result);
 
     Ok(())
