@@ -16,15 +16,43 @@ fn compare_hands(h1: (String, i32), h2: (String, i32)) -> std::cmp::Ordering {
             h1_to_occs.entry(c1).and_modify(|counter| *counter += 1).or_insert(1);
             h2_to_occs.entry(c2).and_modify(|counter| *counter += 1).or_insert(1);
         }
+        
+        let j1 :Option<i32> = h1_to_occs.remove(&'J');
+
+        if j1.is_some() {
+            if h1_to_occs.is_empty() {
+                h1_to_occs.insert('A', j1.unwrap());
+            }
+            else {
+                let key_with_max_value_h1 = h1_to_occs.iter().max_by_key(|entry| entry.1).unwrap();
+
+                h1_to_occs.insert(*key_with_max_value_h1.0, h1_to_occs[key_with_max_value_h1.0] + j1.unwrap());
+            }
+        }
+
+        let j2 :Option<i32> = h2_to_occs.remove(&'J');
+
+        if j2.is_some() {
+            if h2_to_occs.is_empty() {
+                h2_to_occs.insert('A', j2.unwrap());
+            }
+            else {
+                let key_with_max_value_h2 = h2_to_occs.iter().max_by_key(|entry| entry.1).unwrap();
+
+                h2_to_occs.insert(*key_with_max_value_h2.0, h2_to_occs[key_with_max_value_h2.0] + j2.unwrap());
+            }
+        }
+        
         let mut occs1 :Vec<i32> = h1_to_occs.into_values().collect();
         let mut occs2 :Vec<i32> = h2_to_occs.into_values().collect();
+
         occs1.sort_unstable();
         occs2.sort_unstable();
         if occs1.len() < occs2.len() || occs1.last() > occs2.last() {
             return Ordering::Greater;
         }
         else if occs1 == occs2 {
-            let cards_by_strength :[char; 13] = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
+            let cards_by_strength :[char; 13] = ['A', 'K', 'Q', 'T', '9', '8', '7', '6', '5', '4', '3', '2', 'J'];
             for (c1, c2) in zip(h1.0.chars(), h2.0.chars()) {
                 let c1_index = cards_by_strength.iter().position(|&c| c == c1);
                 let c2_index = cards_by_strength.iter().position(|&c| c == c2);
