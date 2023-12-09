@@ -35,7 +35,7 @@ fn main() -> io::Result<()> {
 
         let mut extrapolated_value: i64 = 0;
         for partial_diffs in diffs.iter().rev() {
-            extrapolated_value += partial_diffs.last().unwrap();
+            extrapolated_value = partial_diffs[0] - extrapolated_value;
         }
 
         result += extrapolated_value;
