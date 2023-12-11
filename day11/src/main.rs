@@ -1,3 +1,5 @@
+#![feature(cmp_minmax)]
+use std::cmp;
 use std::fs::File;
 use std::io::{self, prelude::*, BufReader};
 
@@ -5,7 +7,7 @@ fn main() -> io::Result<()> {
     let file = File::open("src/input.txt")?;
     let reader = BufReader::new(file);
 
-    let mut result = 0;
+    let mut result: i64 = 0;
 
     let mut universe: Vec<Vec<char>> = vec![];
 
@@ -13,50 +15,37 @@ fn main() -> io::Result<()> {
         universe.push(line.chars().collect());
     }
 
-    // double each empty row
-
-    let mut indices: Vec<usize> = vec![];
-
-    for (i, v) in universe.iter().enumerate() {
-        if v.iter().all(|&x| x == '.') {
-            indices.push(i);
-        }
-    }
-
-    let width = universe[0].len();
-    for ind in indices.iter().rev() {
-        universe.insert(*ind, vec!['.'; width]);
-    }
-
-    // double each empty column
-
-    let mut indices: Vec<usize> = vec![];
-
-    for j in 0..universe[0].len() {
-        let mut empty = true;
-        for vec in universe.iter() {
-            if vec[j] == '#' {
-                empty = false;
-                break;
-            }
-        }
-        if empty {
-            indices.push(j);
-        }
-    }
-
-    for ind in indices.iter().rev() {
-        for vec in universe.iter_mut() {
-            vec.insert(*ind, '.');
-        }
-    }
-
     for (i1, vec1) in universe.iter().enumerate() {
         for (j1, ch1) in vec1.iter().enumerate() {
             for (i2, vec2) in universe.iter().enumerate() {
                 for (j2, ch2) in vec2.iter().enumerate() {
                     if *ch1 == '#' && *ch2 == '#' && (i2 > i1 || (j2 > j1 && i1 == i2)) {
-                        let add = (i2 as i32 - i1 as i32).abs() + (j1 as i32 - j2 as i32).abs();
+                        let mut add = (i2 as i64 - i1 as i64).abs() + (j1 as i64 - j2 as i64).abs();
+
+                        let [i1_m, i2_m] = cmp::minmax(i1, i2);
+                        let [j1_m, j2_m] = cmp::minmax(j1, j2);
+
+                        // find empty rows
+                        for vec in universe.iter().take(i2_m).skip(i1_m + 1) {
+                            if vec.iter().all(|&x| x == '.') {
+                                add += 999_999;
+                            }
+                        }
+
+                        // find empty columns
+                        for j in j1_m + 1..j2_m {
+                            let mut empty = true;
+                            for vec in universe.iter() {
+                                if vec[j] == '#' {
+                                    empty = false;
+                                    break;
+                                }
+                            }
+                            if empty {
+                                add += 999_999;
+                            }
+                        }
+
                         result += add;
                     }
                 }
