@@ -4,30 +4,30 @@ use std::io::{self, prelude::*, BufReader};
 
 fn process_board(board: &[Vec<char>], res: &mut i64) {
     for start in 0..board.len() - 1 {
-        let mut mirror_found = true;
+        let mut smudges = 0;
         for i in 0..min(start + 1, board.len() - start - 1) {
-            if board[start - i] != board[start + 1 + i] {
-                mirror_found = false;
-                break;
+            for j in 0..board[0].len() {
+                if board[start - i][j] != board[start + 1 + i][j] {
+                    smudges += 1;
+                }
             }
         }
-        if mirror_found {
+        if smudges == 1 {
             *res += 100 * (start + 1) as i64;
             break;
         }
     }
 
     for start in 0..board[0].len() - 1 {
-        let mut mirror_found = true;
-        'mirror: for i in 0..min(start + 1, board[0].len() - start - 1) {
+        let mut smudges = 0;
+        for i in 0..min(start + 1, board[0].len() - start - 1) {
             for vec in board.iter() {
                 if vec[start - i] != vec[start + 1 + i] {
-                    mirror_found = false;
-                    break 'mirror;
+                    smudges += 1;
                 }
             }
         }
-        if mirror_found {
+        if smudges == 1 {
             *res += (start + 1) as i64;
             break;
         }
