@@ -87,20 +87,91 @@ fn main() -> io::Result<()> {
 
     let mut contraption: Vec<Vec<char>> = vec![];
 
-    let mut directions: Vec<Vec<HashSet<(Direction, Direction)>>> = vec![];
+    let mut directions_orig: Vec<Vec<HashSet<(Direction, Direction)>>> = vec![];
 
     for line in reader.lines().map_while(Result::ok) {
         contraption.push(line.chars().collect());
-        directions.push(vec![HashSet::new(); line.chars().count()]);
+        directions_orig.push(vec![HashSet::new(); line.chars().count()]);
     }
 
-    trace_rays(&contraption, &mut directions, 0, 0, Direction::Right);
+    for i in 0..contraption.len() {
+        let mut directions = directions_orig.clone();
+        let mut tmp_result = 0;
 
-    for vec in directions.iter() {
-        for h in vec.iter() {
-            if !h.is_empty() {
-                result += 1;
+        trace_rays(&contraption, &mut directions, i, 0, Direction::Right);
+
+        for vec in directions.iter() {
+            for h in vec.iter() {
+                if !h.is_empty() {
+                    tmp_result += 1;
+                }
             }
+        }
+        if tmp_result > result {
+            result = tmp_result;
+        }
+    }
+    for i in 0..contraption.len() {
+        let mut directions = directions_orig.clone();
+        let mut tmp_result = 0;
+
+        trace_rays(
+            &contraption,
+            &mut directions,
+            i,
+            contraption[0].len() - 1,
+            Direction::Left,
+        );
+
+        for vec in directions.iter() {
+            for h in vec.iter() {
+                if !h.is_empty() {
+                    tmp_result += 1;
+                }
+            }
+        }
+        if tmp_result > result {
+            result = tmp_result;
+        }
+    }
+    for i in 0..contraption[0].len() {
+        let mut directions = directions_orig.clone();
+        let mut tmp_result = 0;
+
+        trace_rays(&contraption, &mut directions, 0, i, Direction::Down);
+
+        for vec in directions.iter() {
+            for h in vec.iter() {
+                if !h.is_empty() {
+                    tmp_result += 1;
+                }
+            }
+        }
+        if tmp_result > result {
+            result = tmp_result;
+        }
+    }
+    for i in 0..contraption[0].len() {
+        let mut directions = directions_orig.clone();
+        let mut tmp_result = 0;
+
+        trace_rays(
+            &contraption,
+            &mut directions,
+            contraption.len() - 1,
+            i,
+            Direction::Up,
+        );
+
+        for vec in directions.iter() {
+            for h in vec.iter() {
+                if !h.is_empty() {
+                    tmp_result += 1;
+                }
+            }
+        }
+        if tmp_result > result {
+            result = tmp_result;
         }
     }
 
