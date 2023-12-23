@@ -82,12 +82,14 @@ fn main() -> io::Result<()> {
     while let Some(((vertex, last_move), _)) = mpq.pop() {
         if predecessors[vertex.0][vertex.1].is_empty() {
             // starting node case
-            for i in 1..=3 {
+            for i in 4..=10 {
                 predecessors[vertex.0][vertex.1 + i].insert(LastMove::Horizontal, vertex);
-                let new_distance: Infinitable<i64> = distances[vertex.0][vertex.1 + i - 1]
-                    .get(&LastMove::Horizontal)
-                    .map_or(Finite(0), |v| *v)
-                    + Finite(blocks[vertex.0][vertex.1 + i]);
+                let mut new_distance: Infinitable<i64> = *distances[vertex.0][vertex.1]
+                    .get(&LastMove::Vertical)
+                    .unwrap();
+                for j in 1..=i {
+                    new_distance = new_distance + Finite(blocks[vertex.0][vertex.1 + j]);
+                }
                 distances[vertex.0][vertex.1 + i].insert(LastMove::Horizontal, new_distance);
                 mpq.push(
                     ((vertex.0, vertex.1 + i), LastMove::Horizontal),
@@ -95,15 +97,14 @@ fn main() -> io::Result<()> {
                 );
 
                 predecessors[vertex.0 + i][vertex.1].insert(LastMove::Vertical, vertex);
-                let new_distance: Infinitable<i64> = distances[vertex.0 + i - 1][vertex.1]
-                    .get(&LastMove::Vertical)
-                    .map_or(Finite(0), |v| *v)
-                    + Finite(blocks[vertex.0 + i][vertex.1]);
+                let mut new_distance: Infinitable<i64> = *distances[vertex.0][vertex.1]
+                    .get(&LastMove::Horizontal)
+                    .unwrap();
+                for j in 1..=i {
+                    new_distance = new_distance + Finite(blocks[vertex.0 + j][vertex.1]);
+                }
                 distances[vertex.0 + i][vertex.1].insert(LastMove::Vertical, new_distance);
-                mpq.push(
-                    ((vertex.0 + i, vertex.1), LastMove::Horizontal),
-                    new_distance,
-                );
+                mpq.push(((vertex.0 + i, vertex.1), LastMove::Vertical), new_distance);
             }
         } else {
             if predecessors[vertex.0][vertex.1]
@@ -111,7 +112,7 @@ fn main() -> io::Result<()> {
                 .is_some()
             {
                 // check top and down
-                for i in 1..=3 {
+                for i in 4..=10 {
                     if vertex.0 >= i
                         && !discovered.contains(&((vertex.0 - i, vertex.1), LastMove::Vertical))
                     {
@@ -182,7 +183,7 @@ fn main() -> io::Result<()> {
                 .is_some()
             {
                 // check left and right
-                for i in 1..=3 {
+                for i in 4..=10 {
                     if vertex.1 >= i
                         && !discovered.contains(&((vertex.0, vertex.1 - i), LastMove::Horizontal))
                     {
