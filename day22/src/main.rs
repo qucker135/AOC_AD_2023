@@ -1,4 +1,5 @@
 use std::cmp::{max, min};
+use std::collections::HashSet;
 use std::fs::File;
 use std::io::{self, prelude::*, BufReader};
 
@@ -18,6 +19,23 @@ fn is_blocked(blocked: Brick, blocking: Brick) -> bool {
             || min(blocked.0.x, blocked.1.x) > max(blocking.0.x, blocking.1.x))
         && !(max(blocked.0.y, blocked.1.y) < min(blocking.0.y, blocking.1.y)
             || min(blocked.0.y, blocked.1.y) > max(blocking.0.y, blocking.1.y))
+}
+
+fn find_descendants_that_would_fall(
+    prev_next_data: &Vec<(Vec<usize>, Vec<usize>)>,
+    would_fall_indices: &mut HashSet<usize>,
+    child_index: usize,
+) {
+    for i in prev_next_data[child_index].1.iter() {
+        if prev_next_data[*i]
+            .0
+            .iter()
+            .all(|j| would_fall_indices.contains(j))
+        {
+            would_fall_indices.insert(*i);
+            find_descendants_that_would_fall(prev_next_data, would_fall_indices, *i);
+        }
+    }
 }
 
 fn main() -> io::Result<()> {
@@ -66,32 +84,33 @@ fn main() -> io::Result<()> {
         }
     }
 
-    // find nr of bricks, that are not the only blocking for all of their blocked bricks
-    // if exists a brick that a brick_checked is the only blocking for, then do not count brick_checked
-    for brick_checked in bricks.iter() {
-        let mut count_checked = true;
+    let mut prev_next_data: Vec<(Vec<usize>, Vec<usize>)> = vec![(vec![], vec![]); bricks.len()];
 
-        for brick_blocked in bricks.iter() {
-            if is_blocked(*brick_blocked, *brick_checked) {
-                let mut is_only_blocking = true;
-                for brick_blocking in bricks.iter() {
-                    if brick_blocking != brick_checked
-                        && is_blocked(*brick_blocked, *brick_blocking)
-                    {
-                        is_only_blocking = false;
-                        break;
-                    }
-                }
-                if is_only_blocking {
-                    count_checked = false;
-                    break;
-                }
+    for i in 0..bricks.len() {
+        for j in 0..bricks.len() {
+            if is_blocked(bricks[i], bricks[j]) {
+                prev_next_data[i].0.push(j);
+                prev_next_data[j].1.push(i);
+            }
+        }
+    }
+
+    for i_removed in 0..bricks.len() {
+        let mut would_fall_indices: HashSet<usize> = HashSet::new();
+
+        // find children, that would fall
+        for i_child in prev_next_data[i_removed].1.iter() {
+            if prev_next_data[*i_child].0.len() == 1 {
+                would_fall_indices.insert(*i_child);
             }
         }
 
-        if count_checked {
-            result += 1;
+        // now further descendants, that would fall
+        for i_child in would_fall_indices.clone().iter() {
+            find_descendants_that_would_fall(&prev_next_data, &mut would_fall_indices, *i_child);
         }
+
+        result += would_fall_indices.len();
     }
 
     println!("Final answer: {:?}", result);
